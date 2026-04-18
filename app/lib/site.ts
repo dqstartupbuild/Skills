@@ -33,7 +33,7 @@ export const site = {
   name: "DQ Skills Library",
   url: configuredSiteUrl.replace(/\/$/, ""),
   publisherName: "@dqstartupbuild",
-  defaultTitle: "DQ Skills Library — Agentic Infrastructure for AI Coding Agents",
+  defaultTitle: "DQ Skills Library — Agentic Infrastructure for AI Agents",
   defaultDescription:
     "A curated collection of production-grade skills for AI coding agents. Codified architectural patterns that turn AI assistants into precision engineering tools.",
   keywords: [
