@@ -30,12 +30,12 @@ const STEPS = [
 
 /* ─── Compatible agents ─── */
 const AGENTS = [
+  "Codex",
   "Claude Code",
   "Cursor",
   "Windsurf",
   "Gemini CLI",
-  "Cline",
-  "Codex",
+  "+ More",
 ];
 
 type HomeClientProps = {
