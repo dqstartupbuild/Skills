@@ -5,56 +5,97 @@ import { site } from "@/lib/site";
 export function SiteFooter() {
   return (
     <footer
-      className="px-6 py-10 text-center"
+      className="px-6 py-14"
       style={{
         background: "var(--surface)",
         borderTop: "1px solid var(--border)",
       }}
     >
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-center gap-2.5 mb-4">
-          <span className="text-sm font-semibold text-text-primary">
-            {site.name}
-          </span>
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-10">
+          {/* Brand Column */}
+          <div className="max-w-xs">
+            <div className="flex items-center gap-2.5 mb-3">
+              <span
+                className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold"
+                style={{
+                  background: "linear-gradient(135deg, var(--accent), var(--accent-dark))",
+                  color: "var(--text-inverse)",
+                }}
+              >
+                DQ
+              </span>
+              <span className="text-sm font-semibold text-text-primary">
+                {site.name}
+              </span>
+            </div>
+            <p className="text-sm text-text-tertiary leading-relaxed">
+              Production-grade skills for AI coding agents. Built by{" "}
+              <a
+                href="https://x.com/dqstartupbuild"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-text-secondary hover:text-accent transition-colors"
+              >
+                @dqstartupbuild
+              </a>
+            </p>
+          </div>
+
+          {/* Links */}
+          <div className="flex gap-12">
+            <div>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3">
+                Navigate
+              </p>
+              <nav className="flex flex-col gap-2 text-sm text-text-secondary">
+                <Link href="/" className="transition-colors hover:text-text-primary">
+                  Home
+                </Link>
+                <Link href="/blog" className="transition-colors hover:text-text-primary">
+                  Blog
+                </Link>
+                <a
+                  href={site.ctaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-colors hover:text-text-primary"
+                >
+                  GitHub
+                </a>
+              </nav>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3">
+                Legal
+              </p>
+              <nav className="flex flex-col gap-2 text-sm text-text-secondary">
+                <Link
+                  href="/privacy"
+                  className="transition-colors hover:text-text-primary"
+                >
+                  Privacy
+                </Link>
+                <Link
+                  href="/terms"
+                  className="transition-colors hover:text-text-primary"
+                >
+                  Terms
+                </Link>
+              </nav>
+            </div>
+          </div>
         </div>
-        <nav className="flex items-center justify-center gap-5 text-sm text-text-secondary mb-4">
-          <Link href="/" className="transition-colors hover:text-text-primary">
-            Home
-          </Link>
-          <Link
-            href="/blog"
-            className="transition-colors hover:text-text-primary"
-          >
-            Blog
-          </Link>
-          <a
-            href={site.ctaUrl}
-            className="transition-colors hover:text-text-primary"
-          >
-            {site.ctaLabel}
-          </a>
-        </nav>
-        <nav className="flex items-center justify-center gap-4 text-xs text-text-tertiary mb-4">
-          <Link
-            href="/privacy"
-            className="transition-colors hover:text-text-secondary"
-          >
-            Privacy Policy
-          </Link>
-          <span className="text-border">·</span>
-          <Link
-            href="/terms"
-            className="transition-colors hover:text-text-secondary"
-          >
-            Terms of Use
-          </Link>
-        </nav>
-        <p className="text-sm text-text-tertiary mb-2">
-          {site.defaultDescription}
-        </p>
-        <p className="text-xs text-text-tertiary">
-          © {new Date().getFullYear()} {site.name}. All rights reserved.
-        </p>
+
+        <div
+          className="pt-6 text-center"
+          style={{ borderTop: "1px solid var(--border)" }}
+        >
+          <p className="text-xs text-text-tertiary">
+            © {new Date().getFullYear()} {site.name}. All rights reserved.
+          </p>
+        </div>
       </div>
     </footer>
   );
