@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
 import { getPublishedBlogPosts } from "@/lib/content/queries";
 import { createCanonicalUrl, site } from "@/lib/site";
+import { getAllSkillSlugs } from "@/lib/skill-detail";
+import { createSkillRoutePath } from "@/lib/skill-links";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries = site.staticPages.map((page) => ({
     url: createCanonicalUrl(page.pathname),
     lastModified: new Date(),
@@ -17,5 +19,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.78,
   }));
 
-  return [...staticEntries, ...postEntries];
+  const skillSlugs = await getAllSkillSlugs();
+  const skillEntries = skillSlugs.map((slug) => ({
+    url: createCanonicalUrl(createSkillRoutePath(slug)),
+    lastModified: new Date(), // using current date since skills are dynamically sourced
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  return [...staticEntries, ...postEntries, ...skillEntries];
 }

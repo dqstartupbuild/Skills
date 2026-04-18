@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { CopyButton } from "@/app/home/components/copy-button";
 import { CheckIcon } from "@/app/home/components/icons";
 import type { RevealRefCallback } from "@/app/home/types";
+import { createSkillRoutePath } from "@/lib/skill-links";
 import type { SkillCatalogEntry, SkillStatus } from "@/lib/skills";
 
 type SkillCardProps = {
@@ -15,13 +17,19 @@ export function SkillCard({
   transitionDelay,
 }: SkillCardProps) {
   const copyCommand = `npx skills add ${skill.installTarget}`;
+  const skillPath = createSkillRoutePath(skill.slug);
 
   return (
     <div
       ref={addRevealRef}
-      className="reveal skill-card"
+      className="reveal skill-card group"
       style={{ transitionDelay }}
     >
+      <Link
+        href={skillPath}
+        aria-label={`View ${skill.name} skill`}
+        className="absolute inset-0 z-10 rounded-[inherit]"
+      />
       <div className="flex flex-col lg:flex-row lg:items-start gap-6">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-3">
@@ -37,6 +45,10 @@ export function SkillCard({
 
           <p className="text-text-secondary text-sm leading-relaxed mb-4">
             {skill.description}
+          </p>
+
+          <p className="mb-4 text-sm font-medium text-accent-light">
+            Open skill detail →
           </p>
 
           {skill.tags.length > 0 ? (
@@ -65,7 +77,7 @@ export function SkillCard({
                 </span>
               </code>
             </div>
-            <div className="absolute right-3 opacity-50 group-hover:opacity-100 transition-opacity">
+            <div className="absolute right-3 z-20 opacity-50 group-hover:opacity-100 transition-opacity">
               <CopyButton textToCopy={copyCommand} />
             </div>
           </div>

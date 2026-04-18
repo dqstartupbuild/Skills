@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { useState } from "react";
 import { CheckIcon, CopyIcon } from "@/app/home/components/icons";
 
@@ -10,7 +11,9 @@ type CopyButtonProps = {
 export function CopyButton({ textToCopy }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  function handleCopy() {
+  function handleCopy(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

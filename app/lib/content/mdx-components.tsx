@@ -34,11 +34,17 @@ function InlineLink(props: ComponentPropsWithoutRef<"a">) {
 
 export const mdxComponents = {
   a: InlineLink,
+  h1: (props: ComponentPropsWithoutRef<"h1">) => (
+    <h1 {...props} className="text-4xl font-semibold text-text-primary md:text-5xl" />
+  ),
   h2: (props: ComponentPropsWithoutRef<"h2">) => (
     <h2 {...props} className="mt-12 text-3xl font-semibold text-text-primary" />
   ),
   h3: (props: ComponentPropsWithoutRef<"h3">) => (
     <h3 {...props} className="mt-10 text-2xl font-semibold text-text-primary" />
+  ),
+  h4: (props: ComponentPropsWithoutRef<"h4">) => (
+    <h4 {...props} className="mt-8 text-xl font-semibold text-text-primary" />
   ),
   p: (props: ComponentPropsWithoutRef<"p">) => (
     <p {...props} className="text-base leading-8 text-text-secondary" />
@@ -65,6 +71,29 @@ export const mdxComponents = {
     <pre
       {...props}
       className="overflow-x-auto rounded-2xl border border-border bg-surface-elevated p-5"
+    />
+  ),
+  hr: (props: ComponentPropsWithoutRef<"hr">) => (
+    <hr {...props} className="my-10 border-border" />
+  ),
+  table: (props: ComponentPropsWithoutRef<"table">) => (
+    <div className="overflow-x-auto rounded-2xl border border-border">
+      <table {...props} className="min-w-full border-collapse bg-surface-elevated" />
+    </div>
+  ),
+  thead: (props: ComponentPropsWithoutRef<"thead">) => (
+    <thead {...props} className="bg-white/3" />
+  ),
+  th: (props: ComponentPropsWithoutRef<"th">) => (
+    <th
+      {...props}
+      className="border-b border-border px-4 py-3 text-left text-sm font-semibold text-text-primary"
+    />
+  ),
+  td: (props: ComponentPropsWithoutRef<"td">) => (
+    <td
+      {...props}
+      className="border-b border-border px-4 py-3 align-top text-sm leading-7 text-text-secondary"
     />
   ),
   CallToAction,

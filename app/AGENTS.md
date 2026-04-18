@@ -16,7 +16,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Editorial Rules
 
-- `seoTitle` is required for blog posts and must stay between 50 and 70 characters.
+- `seoTitle` is required for blog posts and must stay between 40 and 60 characters.
 - Metadata descriptions for content and non-content pages must stay between 110 and 170 characters.
 - Visible page titles can be longer than `seoTitle` when editorial clarity benefits from it.
 - Canonical URLs in content frontmatter must be absolute and must match the configured site URL plus the post slug.
