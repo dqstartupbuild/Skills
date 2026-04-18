@@ -1,0 +1,218 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useRef, useState } from "react";
+import { captureOgNode, importBrowserPreview } from "./client-utils";
+import { renderOgCard, type OgCardConfig } from "@/lib/og/card";
+
+type StudioTarget = {
+  config: OgCardConfig;
+  group: string;
+  imported: boolean;
+  key: string;
+  label: string;
+  outputPath: string;
+  route: string;
+};
+
+type StudioGroup = {
+  description: string;
+  group: string;
+  targets: StudioTarget[];
+  title: string;
+};
+
+type OgStudioClientPageProps = {
+  groups: StudioGroup[];
+  importedCount: number;
+  totalCount: number;
+};
+
+const PREVIEW_SCALE = 0.3;
+const PREVIEW_HEIGHT = 630 * PREVIEW_SCALE;
+
+export function OgStudioClientPage({
+  groups,
+  importedCount,
+  totalCount,
+}: OgStudioClientPageProps) {
+  const [importedMap, setImportedMap] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(groups.flatMap((group) => group.targets.map((target) => [target.key, target.imported]))),
+  );
+  const [busyKeys, setBusyKeys] = useState<Record<string, boolean>>({});
+  const [isImportingAll, setIsImportingAll] = useState(false);
+  const [status, setStatus] = useState("Import saves the exact browser preview shown here.");
+  const previewNodes = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const flatTargets = useMemo(() => groups.flatMap((group) => group.targets), [groups]);
+  const resolvedImportedCount = useMemo(
+    () => Object.values(importedMap).filter(Boolean).length,
+    [importedMap],
+  );
+
+  function setPreviewNode(key: string, node: HTMLDivElement | null) {
+    previewNodes.current[key] = node;
+  }
+
+  async function importTarget(target: StudioTarget) {
+    const node = previewNodes.current[target.key];
+
+    if (!node) {
+      throw new Error(`Missing preview node for ${target.label}.`);
+    }
+
+    const dataUrl = await captureOgNode(node);
+    await importBrowserPreview(target.key, dataUrl);
+    setImportedMap((current) => ({ ...current, [target.key]: true }));
+  }
+
+  async function handleImport(target: StudioTarget) {
+    setBusyKeys((current) => ({ ...current, [target.key]: true }));
+    setStatus(`Importing ${target.label} from the current browser preview...`);
+
+    try {
+      await importTarget(target);
+      setStatus(`Imported ${target.label} from the exact preview.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : `Import failed for ${target.label}.`);
+    } finally {
+      setBusyKeys((current) => ({ ...current, [target.key]: false }));
+    }
+  }
+
+  async function handleImportAll() {
+    setIsImportingAll(true);
+    setStatus(`Importing all ${flatTargets.length} previews from the browser renderer...`);
+
+    try {
+      for (let index = 0; index < flatTargets.length; index += 1) {
+        const target = flatTargets[index];
+        setBusyKeys((current) => ({ ...current, [target.key]: true }));
+        setStatus(`Importing ${index + 1}/${flatTargets.length}: ${target.label}...`);
+        await importTarget(target);
+        setBusyKeys((current) => ({ ...current, [target.key]: false }));
+      }
+
+      setStatus(`Imported all ${flatTargets.length} previews from the browser renderer.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Bulk import failed.");
+    } finally {
+      setIsImportingAll(false);
+      setBusyKeys({});
+    }
+  }
+
+  return (
+    <main className="mx-auto max-w-[1680px] px-5 py-10 sm:px-6 lg:px-10">
+      <div className="surface-card rounded-[2.4rem] border-[rgba(38,218,248,0.16)] p-7 sm:p-8">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--cyan)]">Local import hub</p>
+            <h1 className="mt-5 font-brand text-[clamp(2.4rem,4.4vw,4.8rem)] leading-[0.94] tracking-[-0.06em] text-white">
+              Review cards, then save the exact previews into the repo.
+            </h1>
+            <p className="mt-5 text-base leading-relaxed text-[var(--muted)] sm:text-lg">
+              The cards below are the browser previews. <code>Import</code> and <code>Import All</code> save that
+              exact preview into the final repo path instead of re-rendering it through a different image engine.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start gap-4 rounded-[1.8rem] border border-white/10 bg-white/5 p-5">
+            <p className="text-sm text-white/62">
+              Imported <span className="font-semibold text-white">{resolvedImportedCount}</span> of{" "}
+              <span className="font-semibold text-white">{totalCount}</span> targets
+            </p>
+            <button
+              type="button"
+              disabled={isImportingAll}
+              onClick={() => void handleImportAll()}
+              className="rounded-full bg-[var(--lime)] px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_16px_45px_rgba(214,255,51,0.18)] transition hover:-translate-y-0.5 hover:bg-[#edff7a] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isImportingAll ? "Importing..." : "Import All"}
+            </button>
+            <p className="text-xs leading-6 text-white/45">{status}</p>
+            {importedCount !== resolvedImportedCount ? (
+              <p className="text-xs uppercase tracking-[0.18em] text-white/35">Refresh to sync server-side imported badges</p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 space-y-8">
+        {groups.map((section) => (
+          <section key={section.group}>
+            <div className="mb-5">
+              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-white">{section.title}</h2>
+              <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{section.description}</p>
+            </div>
+
+            <div className="grid gap-5 xl:grid-cols-2">
+              {section.targets.map((target) => {
+                const isBusy = Boolean(busyKeys[target.key]) || isImportingAll;
+                const isImported = Boolean(importedMap[target.key]);
+
+                return (
+                  <article key={target.key} className="surface-card rounded-[2rem] border border-white/10 p-5">
+                    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{target.label}</p>
+                        <p className="mt-1 text-sm text-white/55">{target.route}</p>
+                      </div>
+                      <span
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${
+                          isImported
+                            ? "border-[rgba(214,255,51,0.24)] bg-[rgba(214,255,51,0.12)] text-[var(--lime)]"
+                            : "border-white/12 bg-white/5 text-white/72"
+                        }`}
+                      >
+                        {isImported ? "Imported" : "Staged"}
+                      </span>
+                    </div>
+
+                    <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[rgba(255,255,255,0.02)] p-3">
+                      <div style={{ height: PREVIEW_HEIGHT, overflow: "hidden" }}>
+                        <div
+                          ref={(node) => setPreviewNode(target.key, node)}
+                          style={{
+                            width: 1200,
+                            height: 630,
+                            transform: `scale(${PREVIEW_SCALE})`,
+                            transformOrigin: "top left",
+                          }}
+                        >
+                          {renderOgCard(target.config, "/AppIcon.png")}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/62">
+                      Output path: {target.outputPath}
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <Link
+                        href={`/og-studio/${target.key}`}
+                        className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-[var(--cyan)] hover:bg-white/10"
+                      >
+                        Preview
+                      </Link>
+
+                      <button
+                        type="button"
+                        disabled={isBusy}
+                        onClick={() => void handleImport(target)}
+                        className="rounded-full bg-[var(--lime)] px-4 py-2 text-sm font-semibold text-slate-950 shadow-[0_16px_45px_rgba(214,255,51,0.18)] transition hover:-translate-y-0.5 hover:bg-[#edff7a] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isBusy ? "Importing..." : isImported ? "Re-import" : "Import"}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+    </main>
+  );
+}

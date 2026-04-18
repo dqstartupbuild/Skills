@@ -1,0 +1,245 @@
+import { access } from "node:fs/promises";
+import path from "node:path";
+import type { OgCardConfig } from "./card";
+
+export type OgTargetGroup = "marketing" | "blog" | "compare" | "tools";
+
+export type OgTargetBase = {
+  key: string;
+  label: string;
+  route: string;
+  outputPath: string;
+  group: OgTargetGroup;
+  config: OgCardConfig;
+};
+
+export type OgTarget = OgTargetBase & {
+  imported: boolean;
+};
+
+const SAMPLE_TARGETS: OgTargetBase[] = [
+  {
+    key: "home",
+    label: "Homepage",
+    route: "/",
+    outputPath: "/og/home.png",
+    group: "marketing",
+    config: {
+      brandName: "Acme Product",
+      brandTagline: "A cleaner way to share your product story",
+      siteLabel: "acme.example",
+      eyebrow: "Homepage",
+      title: "Show the main promise in one line.",
+      description: "This is the browser-rendered preview the studio imports as the final PNG.",
+      accent: "cyan",
+      badge: "Home",
+      chips: ["Fast setup", "Review first", "Static PNG"],
+      highlights: [
+        { label: "Preview parity", value: "Import the exact browser preview" },
+        { label: "Local-only", value: "Keep the studio behind localhost checks" },
+        { label: "Final path", value: "Write straight into public/og" },
+      ],
+      footer: "Marketing route social preview",
+    },
+  },
+  {
+    key: "pricing",
+    label: "Pricing",
+    route: "/pricing",
+    outputPath: "/og/pricing.png",
+    group: "marketing",
+    config: {
+      brandName: "Acme Product",
+      brandTagline: "A cleaner way to share your product story",
+      siteLabel: "acme.example",
+      eyebrow: "Pricing",
+      title: "Keep pricing cards direct and easy to scan.",
+      description: "Use the same card renderer in the grid and the full preview route so imports stay visually stable.",
+      accent: "magenta",
+      badge: "Plans",
+      chips: ["Monthly", "Annual", "Free trial"],
+      highlights: [
+        { label: "One source", value: "Shared card component for the whole studio" },
+        { label: "Import path", value: "POST captured PNGs to /api/og/import" },
+        { label: "Status", value: "Imported state comes from file existence" },
+      ],
+      footer: "Pricing route social preview",
+    },
+  },
+  {
+    key: "blog-index",
+    label: "Blog index",
+    route: "/blog",
+    outputPath: "/og/blog.png",
+    group: "marketing",
+    config: {
+      brandName: "Acme Product",
+      brandTagline: "A cleaner way to share your product story",
+      siteLabel: "acme.example",
+      eyebrow: "Blog",
+      title: "Use the same browser card tree for previews and imports.",
+      description: "This avoids the drift you get when a browser preview is later re-rendered through another engine.",
+      accent: "lime",
+      badge: "Blog",
+      chips: ["Content hub", "Static OG", "Browser capture"],
+      highlights: [
+        { label: "Static lane", value: "Import exact browser previews" },
+        { label: "Dynamic lane", value: "Keep opengraph-image.tsx separate" },
+        { label: "Review flow", value: "Preview, then import" },
+      ],
+      footer: "Content route social preview",
+    },
+  },
+  {
+    key: "compare-index",
+    label: "Compare index",
+    route: "/compare",
+    outputPath: "/og/compare.png",
+    group: "marketing",
+    config: {
+      brandName: "Acme Product",
+      brandTagline: "A cleaner way to share your product story",
+      siteLabel: "acme.example",
+      eyebrow: "Compare",
+      title: "Turn side-by-side pages into poster-style cards.",
+      description: "Comparison cards should call out the main verdict clearly instead of trying to screenshot the whole page.",
+      accent: "cyan",
+      badge: "Vs",
+      chips: ["Alternatives", "Verdict", "Buyer intent"],
+      highlights: [
+        { label: "Best fit", value: "Summarize the deciding factor in one line" },
+        { label: "Card shape", value: "Large headline plus 2-3 supporting proof blocks" },
+        { label: "Reuse", value: "Keep visual language shared across the set" },
+      ],
+      footer: "Comparison route social preview",
+    },
+  },
+  {
+    key: "tool-hub",
+    label: "Tool hub",
+    route: "/tools",
+    outputPath: "/og/tools.png",
+    group: "marketing",
+    config: {
+      brandName: "Acme Product",
+      brandTagline: "A cleaner way to share your product story",
+      siteLabel: "acme.example",
+      eyebrow: "Tools",
+      title: "Group utility pages under one consistent social system.",
+      description: "Use the same poster-style structure for calculators, graders, and generators so the set feels deliberate.",
+      accent: "magenta",
+      badge: "Tools",
+      chips: ["Calculator", "Generator", "Grader"],
+      highlights: [
+        { label: "Goal", value: "Show the outcome users get from the tool" },
+        { label: "Shape", value: "Poster composition, not a UI screenshot" },
+        { label: "Reuse", value: "Shared studio preview plus import flow" },
+      ],
+      footer: "Tool hub social preview",
+    },
+  },
+  {
+    key: "blog-getting-started",
+    label: "Getting Started Guide",
+    route: "/blog/getting-started",
+    outputPath: "/og/blog-getting-started.png",
+    group: "blog",
+    config: {
+      brandName: "Acme Product",
+      brandTagline: "A cleaner way to share your product story",
+      siteLabel: "acme.example",
+      eyebrow: "Guide",
+      title: "Publish article cards that stay aligned with the in-app preview.",
+      description: "This sample shows how an individual content page can live beside hub-level overview cards.",
+      accent: "cyan",
+      badge: "Guide",
+      chips: ["Setup", "Workflow", "Examples"],
+      highlights: [
+        { label: "Published", value: "May 12, 2026" },
+        { label: "Topic", value: "Getting started with the OG hub workflow" },
+        { label: "Import", value: "Exact browser preview through the local route" },
+      ],
+      footer: "Article social preview",
+    },
+  },
+  {
+    key: "compare-acme-vs-contender",
+    label: "Acme vs Contender",
+    route: "/compare/acme-vs-contender",
+    outputPath: "/og/compare-acme-vs-contender.png",
+    group: "compare",
+    config: {
+      brandName: "Acme Product",
+      brandTagline: "A cleaner way to share your product story",
+      siteLabel: "acme.example",
+      eyebrow: "Comparison",
+      title: "Keep decision-heavy pages crisp at thumbnail size.",
+      description: "Comparison OG cards should lead with the decision angle, not a dense summary of every feature row.",
+      accent: "lime",
+      badge: "Vs",
+      chips: ["Alternatives", "Verdict", "Buyer guide"],
+      highlights: [
+        { label: "Against", value: "Contender Platform" },
+        { label: "Verdict", value: "Best for teams that want a simpler workflow" },
+        { label: "Proof", value: "Use concise supporting highlights instead of body copy" },
+      ],
+      footer: "Comparison detail social preview",
+    },
+  },
+  {
+    key: "tool-roi-calculator",
+    label: "ROI Calculator",
+    route: "/tools/roi-calculator",
+    outputPath: "/og/tool-roi-calculator.png",
+    group: "tools",
+    config: {
+      brandName: "Acme Product",
+      brandTagline: "A cleaner way to share your product story",
+      siteLabel: "acme.example",
+      eyebrow: "Calculator",
+      title: "Free tools still deserve first-class social cards.",
+      description: "Tool cards work best when they promise the result clearly and keep the supporting proof blocks tight.",
+      accent: "magenta",
+      badge: "Tool",
+      chips: ["Calculator", "Lead gen", "Instant results"],
+      highlights: [
+        { label: "Use case", value: "Estimate savings before you commit" },
+        { label: "Outcome", value: "Turn a utility page into a stronger share preview" },
+        { label: "Flow", value: "Preview in studio, then import into public/og" },
+      ],
+      footer: "Tool detail social preview",
+    },
+  },
+];
+
+export function getOgOutputAbsolutePath(outputPath: string) {
+  return path.join(process.cwd(), "public", outputPath.replace(/^\//, ""));
+}
+
+export function getOgTargetBases(): OgTargetBase[] {
+  return SAMPLE_TARGETS;
+}
+
+export function getOgTargetByKey(key: string) {
+  return getOgTargetBases().find((target) => target.key === key);
+}
+
+async function isImported(outputPath: string) {
+  try {
+    await access(getOgOutputAbsolutePath(outputPath));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function getOgTargets(): Promise<OgTarget[]> {
+  const targets = getOgTargetBases();
+
+  return Promise.all(
+    targets.map(async (target) => ({
+      ...target,
+      imported: await isImported(target.outputPath),
+    })),
+  );
+}

@@ -1,0 +1,96 @@
+import { toPng } from "html-to-image";
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function waitForNextPaint() {
+  return new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
+function waitForImageElement(image: HTMLImageElement) {
+  if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
+    if (typeof image.decode === "function") {
+      return image.decode().catch(() => undefined);
+    }
+
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    function cleanup() {
+      image.removeEventListener("load", handleLoad);
+      image.removeEventListener("error", handleError);
+    }
+
+    function handleLoad() {
+      cleanup();
+      resolve();
+    }
+
+    function handleError() {
+      cleanup();
+      reject(new Error(`Unable to load preview image: ${image.currentSrc || image.src}`));
+    }
+
+    image.addEventListener("load", handleLoad);
+    image.addEventListener("error", handleError);
+  });
+}
+
+async function waitForRenderableNode(node: HTMLElement) {
+  if (document.fonts?.ready) {
+    await document.fonts.ready;
+  }
+
+  const images = Array.from(node.querySelectorAll("img"));
+  await Promise.all(images.map((image) => waitForImageElement(image)));
+  await waitForNextPaint();
+}
+
+export async function captureOgNode(node: HTMLElement) {
+  await waitForRenderableNode(node);
+  await wait(50);
+
+  return toPng(node, {
+    width: 1200,
+    height: 630,
+    pixelRatio: 1,
+    cacheBust: true,
+    style: {
+      transform: "none",
+      transformOrigin: "top left",
+    },
+  });
+}
+
+export async function importBrowserPreview(key: string, dataUrl: string) {
+  const response = await fetch("/api/og/import", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ key, dataUrl }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      typeof payload?.error === "string" ? payload.error : `Import failed with status ${response.status}.`,
+    );
+  }
+
+  return payload as {
+    imported: number;
+    results: Array<{
+      absolutePath: string;
+      key: string;
+      outputPath: string;
+    }>;
+  };
+}

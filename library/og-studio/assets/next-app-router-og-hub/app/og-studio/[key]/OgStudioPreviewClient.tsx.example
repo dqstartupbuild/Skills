@@ -1,0 +1,94 @@
+"use client";
+
+import Link from "next/link";
+import { useRef, useState } from "react";
+import { captureOgNode, importBrowserPreview } from "../client-utils";
+import { renderOgCard, type OgCardConfig } from "@/lib/og/card";
+
+type PreviewTarget = {
+  config: OgCardConfig;
+  imported: boolean;
+  key: string;
+  label: string;
+  outputPath: string;
+  route: string;
+};
+
+export function OgStudioPreviewClient({ target }: { target: PreviewTarget }) {
+  const [imported, setImported] = useState(target.imported);
+  const [isImporting, setIsImporting] = useState(false);
+  const [status, setStatus] = useState("Import saves the exact browser preview shown below.");
+  const previewRef = useRef<HTMLDivElement | null>(null);
+
+  async function handleImport() {
+    if (!previewRef.current) {
+      setStatus(`Missing preview node for ${target.label}.`);
+      return;
+    }
+
+    setIsImporting(true);
+    setStatus(`Importing ${target.label} from the current browser preview...`);
+
+    try {
+      const dataUrl = await captureOgNode(previewRef.current);
+      await importBrowserPreview(target.key, dataUrl);
+      setImported(true);
+      setStatus(`Imported ${target.label} from the exact preview.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : `Import failed for ${target.label}.`);
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  return (
+    <main className="mx-auto max-w-[1340px] px-5 py-10 sm:px-6 lg:px-10">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--cyan)]">Full-size preview</p>
+          <h1 className="mt-2 font-brand text-4xl tracking-[-0.06em] text-white">{target.label}</h1>
+          <p className="mt-2 text-base text-[var(--muted)]">
+            Route: {target.route} · Output path: {target.outputPath}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/og-studio"
+            className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-[var(--cyan)] hover:bg-white/10"
+          >
+            Back to hub
+          </Link>
+
+          <button
+            type="button"
+            disabled={isImporting}
+            onClick={() => void handleImport()}
+            className="rounded-full bg-[var(--lime)] px-4 py-2 text-sm font-semibold text-slate-950 shadow-[0_16px_45px_rgba(214,255,51,0.18)] transition hover:-translate-y-0.5 hover:bg-[#edff7a] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isImporting ? "Importing..." : imported ? "Re-import" : "Import"}
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <span
+          className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${
+            imported
+              ? "border-[rgba(214,255,51,0.24)] bg-[rgba(214,255,51,0.12)] text-[var(--lime)]"
+              : "border-white/12 bg-white/5 text-white/72"
+          }`}
+        >
+          {imported ? "Imported" : "Staged"}
+        </span>
+        <p className="text-sm text-white/45">{status}</p>
+      </div>
+
+      <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[rgba(255,255,255,0.02)] p-5">
+        <div ref={previewRef} style={{ width: 1200, height: 630 }}>
+          {renderOgCard(target.config, "/AppIcon.png")}
+        </div>
+      </div>
+    </main>
+  );
+}

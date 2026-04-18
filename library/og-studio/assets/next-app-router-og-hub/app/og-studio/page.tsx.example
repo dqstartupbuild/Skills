@@ -1,0 +1,59 @@
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { OgStudioClientPage } from "./OgStudioClientPage";
+import { getOgTargets, type OgTargetGroup } from "@/lib/og/targets";
+
+function isLocalHost(host: string | null) {
+  if (!host) {
+    return false;
+  }
+
+  const normalizedHost = host.trim().toLowerCase();
+
+  return (
+    normalizedHost === "localhost" ||
+    normalizedHost.startsWith("localhost:") ||
+    normalizedHost === "127.0.0.1" ||
+    normalizedHost.startsWith("127.0.0.1:") ||
+    normalizedHost === "[::1]" ||
+    normalizedHost.startsWith("[::1]:") ||
+    normalizedHost === "::1"
+  );
+}
+
+const groupMeta: Record<OgTargetGroup, { title: string; description: string }> = {
+  marketing: {
+    title: "Core pages",
+    description: "Homepage, pricing, and other stable public marketing routes.",
+  },
+  blog: {
+    title: "Blog posts",
+    description: "Static PNG cards for published articles or other content pages.",
+  },
+  compare: {
+    title: "Comparison pages",
+    description: "Static PNG cards for side-by-side comparisons or feature matchups.",
+  },
+  tools: {
+    title: "Tool pages",
+    description: "Static PNG cards for public tools, calculators, and utility pages.",
+  },
+};
+
+export default async function OgStudioPage() {
+  const requestHeaders = await headers();
+
+  if (!isLocalHost(requestHeaders.get("host"))) {
+    notFound();
+  }
+
+  const targets = await getOgTargets();
+  const importedCount = targets.filter((target) => target.imported).length;
+  const groups = (Object.keys(groupMeta) as OgTargetGroup[]).map((group) => ({
+    group,
+    ...groupMeta[group],
+    targets: targets.filter((target) => target.group === group),
+  }));
+
+  return <OgStudioClientPage groups={groups} importedCount={importedCount} totalCount={targets.length} />;
+}

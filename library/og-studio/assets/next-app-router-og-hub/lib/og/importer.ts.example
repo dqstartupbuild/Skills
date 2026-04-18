@@ -1,0 +1,26 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { getOgOutputAbsolutePath, getOgTargetByKey, type OgTargetBase } from "./targets";
+
+async function writeTargetBuffer(target: OgTargetBase, pngBuffer: Buffer) {
+  const absolutePath = getOgOutputAbsolutePath(target.outputPath);
+
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, pngBuffer);
+
+  return {
+    key: target.key,
+    outputPath: target.outputPath,
+    absolutePath,
+  };
+}
+
+export async function writeTargetPngByKey(key: string, pngBuffer: Buffer) {
+  const target = getOgTargetByKey(key);
+
+  if (!target) {
+    throw new Error(`OG target not found: ${key}`);
+  }
+
+  return writeTargetBuffer(target, pngBuffer);
+}
