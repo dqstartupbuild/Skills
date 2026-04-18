@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO Setup"
+  short_description: "Reusable blog, crawl, metadata, and security setup"
+  default_prompt: "Use $seo-setup to set up a reusable Next.js MDX blog with metadata helpers, CSP/security headers, llms.txt, sitemap, robots, RSS, and structured SEO content flow."
