@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SiteHeader } from "@/app/site-header";
 import { SiteFooter } from "@/app/site-footer";
 import { site } from "@/lib/site";
@@ -135,9 +135,7 @@ export default function Home() {
               <div>
                 <span className="prompt">$</span>{" "}
                 npx skills add{" "}
-                <span className="string">
-                  dqstartupbuild/skills/seo-setup
-                </span>
+                <TerminalTypingEffect />
                 <span className="cursor" />
               </div>
             </div>
@@ -267,7 +265,7 @@ export default function Home() {
                       <code className="text-text-secondary">
                         npx skills add{" "}
                         <span style={{ color: "var(--success)" }}>
-                          dqstartupbuild/skills/{skill.slug}
+                          dqstartupbuild/skills/library/{skill.slug}
                         </span>
                       </code>
                     </div>
@@ -466,8 +464,66 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── Footer ─── */}
       <SiteFooter />
     </div>
   );
+}
+
+/* ─── Terminal Typing Effect ─── */
+function TerminalTypingEffect() {
+  const [text, setText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+
+  useEffect(() => {
+    const skills = SKILLS.length > 0 ? SKILLS.map(s => s.slug) : ["seo-setup"];
+    const stringsToType = skills.length > 1 
+      ? skills.map(slug => `dqstartupbuild/skills/library/${slug}`) 
+      : [
+          ...skills.map(slug => `dqstartupbuild/skills/library/${slug}`), 
+          "dqstartupbuild/skills/library/auth-setup", 
+          "dqstartupbuild/skills/library/database-admin"
+        ];
+      
+    const currentStringIndex = loopNum % stringsToType.length;
+    const fullText = stringsToType[currentStringIndex];
+
+    // --- Speed and Pause Controls (in milliseconds) ---
+    const typingDelay = 80;      // Speed of typing forward
+    const deletingDelay = 60;    // Speed of backspacing
+    const pauseAfterTyping = 1700; // How long to stay fully typed before deleting (reduced from 3000)
+    const pauseBeforeTypingNew = 200; // Brief pause before starting the new word
+
+    const baseSpeed = isDeleting ? deletingDelay : typingDelay;
+    const typingSpeed = isDeleting ? baseSpeed : baseSpeed + Math.random() * 40;
+
+    let timer: NodeJS.Timeout;
+
+    const tick = () => {
+      if (isDeleting) {
+        setText(fullText.substring(0, text.length - 1));
+      } else {
+        setText(fullText.substring(0, text.length + 1));
+      }
+    };
+
+    const prefix = "dqstartupbuild/skills/library/";
+
+    if (!isDeleting && text === fullText) {
+      // Pause at the end of typing before deleting
+      timer = setTimeout(() => setIsDeleting(true), pauseAfterTyping);
+    } else if (isDeleting && text === prefix) {
+      // Pause briefly before typing the next word
+      timer = setTimeout(() => {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+      }, pauseBeforeTypingNew);
+    } else {
+      timer = setTimeout(tick, typingSpeed);
+    }
+
+    return () => clearTimeout(timer);
+  }, [text, isDeleting, loopNum]);
+
+  return <span className="string">{text}</span>;
 }
