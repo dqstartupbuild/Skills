@@ -18,7 +18,7 @@ This skill automates the setup of a professional content delivery system. It ens
 To add this skill to all your local agents (Claude Code, Cursor, Windsurf, etc.), run the following command:
 
 ```bash
-npx skills add https://github.com/dqstartupbuild/skills/seo-setup
+npx skills add https://github.com/dqstartupbuild/skills/library/seo-setup
 ```
 
 ## 🛠️ Usage
