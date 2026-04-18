@@ -48,6 +48,7 @@ export const site = {
   ] as string[],
   ctaUrl: "https://github.com/dqstartupbuild/skills",
   ctaLabel: "View on GitHub",
+  skillInstallBase: "dqstartupbuild/skills/library",
   twitterHandle: "@dqstartupbuild",
   staticPages: [
     {
