@@ -1,6 +1,6 @@
 # DQ Skills Library
 
-A central repository of high-performance AI agent skills, created and managed by [@dqstartupbuild](https://github.com/dqstartupbuild). 
+A central repository of high-performance AI agent skills, created and managed by [@dqstartupbuild](https://x.com/dqstartupbuild). 
 
 This library provides a curated collection of agent-ready instructions and architectural foundations designed to streamline web development, SEO, and application security.
 
