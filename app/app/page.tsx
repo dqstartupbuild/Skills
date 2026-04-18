@@ -102,7 +102,6 @@ export default function Home() {
         <div className="animate-fade-up delay-100 eyebrow mb-6">
           <span
             className="inline-block w-2 h-2 rounded-full"
-            style={{ background: "var(--success)" }}
           />
           Open Source &middot; Built for AI Agents
         </div>

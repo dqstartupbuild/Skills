@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { site } from "@/lib/site";
 
 /** Shared site footer used across all pages. */
@@ -16,15 +17,13 @@ export function SiteFooter() {
           {/* Brand Column */}
           <div className="max-w-xs">
             <div className="flex items-center gap-2.5 mb-3">
-              <span
-                className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold"
-                style={{
-                  background: "linear-gradient(135deg, var(--accent), var(--accent-dark))",
-                  color: "var(--text-inverse)",
-                }}
-              >
-                DQ
-              </span>
+              <Image
+                src="/icon.png"
+                alt={`${site.name} Logo`}
+                width={28}
+                height={28}
+                className="w-7 h-7 rounded-lg object-contain"
+              />
               <span className="text-sm font-semibold text-text-primary">
                 {site.name}
               </span>

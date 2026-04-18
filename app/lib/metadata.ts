@@ -50,6 +50,11 @@ export function createPageMetadata({
       description,
       images: [ogImage],
     },
+    icons: {
+      icon: "/favicon.ico",
+      shortcut: "/favicon.ico",
+      apple: "/apple-touch-icon.png",
+    },
     robots: noIndex
       ? {
           index: false,

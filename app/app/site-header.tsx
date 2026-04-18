@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { site } from "@/lib/site";
 
 /**
@@ -30,15 +31,13 @@ export function SiteHeader({
     >
       <Link href="/" className="flex items-center gap-2.5 group">
         {/* Logo mark */}
-        <span
-          className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold"
-          style={{
-            background: "linear-gradient(135deg, var(--accent), var(--accent-dark))",
-            color: "var(--text-inverse)",
-          }}
-        >
-          DQ
-        </span>
+        <Image
+          src="/icon.png"
+          alt={`${site.name} Logo`}
+          width={32}
+          height={32}
+          className="w-8 h-8 rounded-lg object-contain"
+        />
         <span className="text-sm font-semibold tracking-tight text-text-primary group-hover:text-accent-light transition-colors">
           {site.name}
         </span>
